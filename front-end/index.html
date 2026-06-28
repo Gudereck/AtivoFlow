@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtivoFlow | Gestão de Ativos & Chamados</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    
+    <!-- CONTAINER DE AUTENTICAÇÃO (LOGIN & CADASTRO) -->
+    <div class="auth-container" id="auth-container">
+        <!-- CARD DE LOGIN -->
+        <div class="auth-card" id="login-card">
+            <div class="auth-brand">
+                <div class="auth-brand-icon">
+                    <i data-lucide="cpu"></i>
+                </div>
+                <span>AtivoFlow</span>
+            </div>
+            <h2>Bem-vindo de volta</h2>
+            <p class="auth-subtitle">Inicie sessão para gerir os ativos de TI</p>
+            
+            <form id="form-login" class="auth-form">
+                <div class="form-group">
+                    <label for="login-username">Utilizador</label>
+                    <div class="input-icon-wrapper">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" id="login-username" required placeholder="Digite o seu utilizador">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Palavra-passe</label>
+                    <div class="input-icon-wrapper">
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" id="login-password" required placeholder="Digite a sua senha">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-auth" id="btn-login-submit">
+                    <span>Entrar</span>
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <span>Não tem uma conta? <a href="#" id="link-goto-register">Criar conta</a></span>
+            </div>
+            
+            <div class="auth-hint">
+                <i data-lucide="info" style="width: 14px; height: 14px;"></i>
+                <span>Acesso padrão: <strong>admin</strong> / <strong>admin</strong></span>
+            </div>
+        </div>
+
+        <!-- CARD DE CADASTRO -->
+        <div class="auth-card" id="register-card" style="display: none;">
+            <div class="auth-brand">
+                <div class="auth-brand-icon">
+                    <i data-lucide="cpu"></i>
+                </div>
+                <span>AtivoFlow</span>
+            </div>
+            <h2>Criar nova conta</h2>
+            <p class="auth-subtitle">Cadastre-se como técnico ou administrador</p>
+            
+            <form id="form-register" class="auth-form">
+                <div class="form-group">
+                    <label for="reg-nome">Nome Completo</label>
+                    <div class="input-icon-wrapper">
+                        <i data-lucide="info" class="input-icon"></i>
+                        <input type="text" id="reg-nome" required placeholder="Ex: João Silva">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reg-username">Utilizador (Username)</label>
+                    <div class="input-icon-wrapper">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" id="reg-username" required placeholder="Ex: joao.silva">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Palavra-passe</label>
+                    <div class="input-icon-wrapper">
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" id="reg-password" required placeholder="Mínimo 4 caracteres">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reg-role">Cargo / Função</label>
+                    <div class="select-wrapper">
+                        <select id="reg-role" required>
+                            <option value="Técnico de TI" selected>Técnico de TI</option>
+                            <option value="Administrador de TI">Administrador de TI</option>
+                            <option value="Suporte de Sistemas">Suporte de Sistemas</option>
+                            <option value="Gestor de Infraestrutura">Gestor de Infraestrutura</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-auth" id="btn-register-submit">
+                    <span>Registar Conta</span>
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <span>Já tem conta? <a href="#" id="link-goto-login">Voltar ao Login</a></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTAINER PRINCIPAL DA APLICAÇÃO (OCULTO ANTES DE FAZER LOGIN) -->
+    <div class="app-container" id="app-container" style="display: none;">
+        <!-- Sidebar para Desktop -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i data-lucide="cpu"></i>
+                </div>
+                <span>AtivoFlow</span>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-tab="equipamentos">
+                    <i data-lucide="laptop"></i>
+                    <span>Equipamentos</span>
+                </button>
+                <button class="nav-item" data-tab="chamados">
+                    <i data-lucide="wrench"></i>
+                    <span>Chamados</span>
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="server-status" style="margin-bottom: 12px;">
+                    <span class="status-dot online"></span>
+                    <span>Servidor Online</span>
+                </div>
+                <button class="btn btn-secondary btn-sm btn-logout" id="btn-sidebar-logout" style="width: 100%; justify-content: flex-start; gap: 10px;">
+                    <i data-lucide="log-out" style="width: 15px; height: 15px;"></i>
+                    <span>Sair</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Container Principal -->
+        <div class="main-wrapper">
+            <!-- Header Superior -->
+            <header class="main-header">
+                <div class="header-left">
+                    <h1 id="page-title">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div id="btn-refresh" class="icon-button" title="Atualizar dados">
+                        <i data-lucide="refresh-cw"></i>
+                    </div>
+                    <div class="user-profile">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256" alt="Foto de perfil" class="avatar">
+                        <div class="user-info">
+                            <span class="user-name" id="header-user-name">Ana Sousa</span>
+                            <span class="user-role" id="header-user-role">Técnica de TI</span>
+                        </div>
+                        <div id="btn-header-logout" class="icon-button" title="Sair" style="width: 32px; height: 32px; margin-left: 8px; border-color: rgba(239, 68, 68, 0.2); color: hsl(var(--danger));">
+                            <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Conteúdo Dinâmico (Tabs) -->
+            <main class="content-area">
+                
+                <!-- TAB: DASHBOARD -->
+                <section id="tab-dashboard" class="tab-content active">
+                    <!-- Cards de Métricas -->
+                    <div class="metrics-grid">
+                        <div class="metric-card primary">
+                            <div class="metric-header">
+                                <span>Total Equipamentos</span>
+                                <div class="metric-icon"><i data-lucide="hard-drive"></i></div>
+                            </div>
+                            <h2 class="metric-value" id="stat-total-equipamentos">-</h2>
+                            <p class="metric-sub">Ativos de TI registados</p>
+                        </div>
+                        <div class="metric-card success">
+                            <div class="metric-header">
+                                <span>Equipamentos Ativos</span>
+                                <div class="metric-icon"><i data-lucide="check-circle-2"></i></div>
+                            </div>
+                            <h2 class="metric-value" id="stat-ativos-equipamentos">-</h2>
+                            <p class="metric-sub" id="stat-ativos-percent">-% operacionais</p>
+                        </div>
+                        <div class="metric-card warning">
+                            <div class="metric-header">
+                                <span>Em Manutenção</span>
+                                <div class="metric-icon"><i data-lucide="alert-circle"></i></div>
+                            </div>
+                            <h2 class="metric-value" id="stat-manutencao-equipamentos">-</h2>
+                            <p class="metric-sub">Requerem atenção técnica</p>
+                        </div>
+                        <div class="metric-card danger">
+                            <div class="metric-header">
+                                <span>Chamados Abertos</span>
+                                <div class="metric-icon"><i data-lucide="ticket"></i></div>
+                            </div>
+                            <h2 class="metric-value" id="stat-chamados-abertos">-</h2>
+                            <p class="metric-sub">Tickets pendentes de resolução</p>
+                        </div>
+                    </div>
+
+                    <!-- Gráficos -->
+                    <div class="dashboard-charts">
+                        <div class="chart-card">
+                            <h3>Distribuição de Equipamentos</h3>
+                            <div class="chart-container">
+                                <canvas id="chart-equipamentos"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Estado dos Chamados</h3>
+                            <div class="chart-container">
+                                <canvas id="chart-chamados"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Atividades Recentes (Chamados Abertos/Recentes) -->
+                    <div class="recent-activity-card">
+                        <div class="card-header">
+                            <h3>Chamados Recentes</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="app.switchTab('chamados')">Ver Todos</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="table-recent-chamados">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Equipamento</th>
+                                        <th>Responsável</th>
+                                        <th>Abertura</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Conteúdo dinâmico via JS -->
+                                </tbody>
+                            </table>
+                            <div class="empty-state" id="empty-state-recent" style="display: none;">
+                                <i data-lucide="inbox"></i>
+                                <p>Sem chamados registados recentemente.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: EQUIPAMENTOS -->
+                <section id="tab-equipamentos" class="tab-content">
+                    <div class="actions-bar">
+                        <div class="search-filter-wrapper">
+                            <div class="search-input-wrapper">
+                                <i data-lucide="search" class="search-icon"></i>
+                                <input type="text" id="search-equipamentos" placeholder="Pesquisar por nome ou empresa...">
+                            </div>
+                            <div class="select-wrapper">
+                                <select id="filter-status-equipamentos">
+                                    <option value="ALL">Todos os Estados</option>
+                                    <option value="ATIVO">Ativo</option>
+                                    <option value="EM_MANUTENCAO">Em Manutenção</option>
+                                    <option value="DESTACADO">Destacado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="btn-novo-equipamento">
+                            <i data-lucide="plus"></i>
+                            <span>Novo Equipamento</span>
+                        </button>
+                    </div>
+
+                    <!-- Grid de Cartões de Equipamento -->
+                    <div class="equipamentos-grid" id="equipamentos-list">
+                        <!-- Conteúdo dinâmico via JS -->
+                    </div>
+                    
+                    <div class="empty-state" id="empty-state-equipamentos" style="display: none;">
+                        <div class="empty-icon"><i data-lucide="monitor-off"></i></div>
+                        <h3>Nenhum equipamento encontrado</h3>
+                        <p>Tente ajustar os seus filtros de pesquisa ou registe um novo equipamento no botão acima.</p>
+                        <button class="btn btn-outline-primary" onclick="app.openModal('equipamento')">
+                            <i data-lucide="plus"></i> Registar Primeiro Equipamento
+                        </button>
+                    </div>
+                </section>
+
+                <!-- TAB: CHAMADOS -->
+                <section id="tab-chamados" class="tab-content">
+                    <div class="actions-bar">
+                        <div class="search-filter-wrapper">
+                            <div class="search-input-wrapper">
+                                <i data-lucide="search" class="search-icon"></i>
+                                <input type="text" id="search-chamados" placeholder="Pesquisar chamados...">
+                            </div>
+                            <div class="select-wrapper">
+                                <select id="filter-status-chamados">
+                                    <option value="ALL">Todos os Estados</option>
+                                    <option value="ABERTO">Aberto</option>
+                                    <option value="EM_ANDAMENTO">Em Andamento</option>
+                                    <option value="CONCLUIDO">Concluído</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; width: 100%; max-width: 320px;">
+                            <button class="btn btn-secondary" id="btn-novo-tecnico" style="flex: 1;">
+                                <i data-lucide="user-plus"></i>
+                                <span>Novo Técnico</span>
+                            </button>
+                            <button class="btn btn-primary" id="btn-novo-chamado" style="flex: 1.2;">
+                                <i data-lucide="ticket"></i>
+                                <span>Abrir Chamado</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cartões de Chamados (Responsivo) -->
+                    <div class="chamados-list" id="chamados-list">
+                        <!-- Conteúdo dinâmico via JS -->
+                    </div>
+
+                    <div class="empty-state" id="empty-state-chamados" style="display: none;">
+                        <div class="empty-icon"><i data-lucide="ticket-check"></i></div>
+                        <h3>Nenhum chamado encontrado</h3>
+                        <p>Nenhum chamado corresponde aos filtros atuais ou não há chamados registados.</p>
+                        <button class="btn btn-outline-primary" onclick="app.openModal('chamado')">
+                            <i data-lucide="plus"></i> Abrir Novo Chamado
+                        </button>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+
+        <!-- Navegação Inferior para Mobile -->
+        <nav class="bottom-nav">
+            <button class="bottom-nav-item active" data-tab="dashboard">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
+            </button>
+            <button class="bottom-nav-item" data-tab="equipamentos">
+                <i data-lucide="laptop"></i>
+                <span>Equipamentos</span>
+            </button>
+            <button class="bottom-nav-item" data-tab="chamados">
+                <i data-lucide="wrench"></i>
+                <span>Chamados</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- MODAL: REGISTAR EQUIPAMENTO -->
+    <div class="modal-overlay" id="modal-equipamento">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Registar Equipamento</h2>
+                <button class="btn-close-modal" data-close><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-equipamento" class="modal-form">
+                <div class="form-group">
+                    <label for="eq-nome">Nome do Equipamento <span class="required">*</span></label>
+                    <input type="text" id="eq-nome" required placeholder="Ex: MacBook Pro M3, Monitor Dell 27&quot;">
+                </div>
+                <div class="form-group">
+                    <label for="eq-empresa">Nome da Empresa / Proprietário <span class="required">*</span></label>
+                    <input type="text" id="eq-empresa" required placeholder="Ex: Google LLC, Gudereck Corp">
+                    <small class="form-help">Nota: Deve ser único no sistema por restrição de negócio.</small>
+                </div>
+                <div class="form-group">
+                    <label for="eq-especificacoes">Especificações Técnicas</label>
+                    <textarea id="eq-especificacoes" rows="3" placeholder="Ex: 16GB RAM, 512GB SSD, Processador Apple M3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="eq-status">Estado Inicial</label>
+                    <div class="select-wrapper">
+                        <select id="eq-status">
+                            <option value="ATIVO">Ativo</option>
+                            <option value="EM_MANUTENCAO">Em Manutenção</option>
+                            <option value="DESTACADO">Destacado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-close>Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Equipamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTAR TÉCNICO -->
+    <div class="modal-overlay" id="modal-tecnico">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Registar Técnico</h2>
+                <button class="btn-close-modal" data-close><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-tecnico" class="modal-form">
+                <div class="form-group">
+                    <label for="tec-nome">Nome Completo <span class="required">*</span></label>
+                    <input type="text" id="tec-nome" required placeholder="Ex: Pedro Duarte">
+                </div>
+                <div class="form-group">
+                    <label for="tec-email">E-mail <span class="required">*</span></label>
+                    <input type="email" id="tec-email" required placeholder="Ex: pedro.duarte@empresa.com" style="width: 100%; background-color: hsl(var(--bg-dark)); border: 1px solid hsl(var(--border-color)); border-radius: var(--radius-md); padding: 12px 16px; color: hsl(var(--text-primary)); font-family: var(--font-body); font-size: 0.92rem; transition: var(--transition-fast);">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-close>Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Técnico</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ABRIR CHAMADO -->
+    <div class="modal-overlay" id="modal-chamado">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Abrir Chamado Técnico</h2>
+                <button class="btn-close-modal" data-close><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-chamado" class="modal-form">
+                <div class="form-group">
+                    <label for="ch-equipamento">Selecionar Equipamento</label>
+                    <div class="select-wrapper">
+                        <select id="ch-equipamento">
+                            <option value="" selected>Sem Equipamento Específico (Geral)</option>
+                            <!-- Dinâmico via JS -->
+                        </select>
+                    </div>
+                    <small class="form-help text-warning">Se selecionado, o status do equipamento será alterado automaticamente para "Em Manutenção".</small>
+                </div>
+                <div class="form-group">
+                    <label for="ch-tecnico">Técnico Responsável <span class="required">*</span></label>
+                    <div class="select-wrapper">
+                        <select id="ch-tecnico" required>
+                            <option value="" disabled selected>Escolha um técnico...</option>
+                            <!-- Dinâmico via JS -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="ch-descricao">Descrição Detalhada do Problema <span class="required">*</span></label>
+                    <textarea id="ch-descricao" rows="4" required placeholder="Descreva os sintomas do problema de forma detalhada..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-close>Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Abrir Chamado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CONCLUIR CHAMADO -->
+    <div class="modal-overlay" id="modal-concluir">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Concluir Chamado</h2>
+                <button class="btn-close-modal" data-close><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-concluir" class="modal-form">
+                <input type="hidden" id="concluir-chamado-id">
+                <div class="form-group">
+                    <label>Equipamento</label>
+                    <input type="text" id="concluir-equipamento-nome" readonly class="input-readonly">
+                </div>
+                <div class="form-group">
+                    <label>Descrição do Problema</label>
+                    <div class="text-display" id="concluir-descricao-problema"></div>
+                </div>
+                <div class="form-group">
+                    <label for="concluir-diagnostico">Diagnóstico Técnico da Resolução <span class="required">*</span></label>
+                    <textarea id="concluir-diagnostico" rows="4" required placeholder="Descreva qual foi a causa raiz e como resolveu o problema..."></textarea>
+                    <small class="form-help text-success">Nota: Ao concluir o chamado, o status do equipamento retornará automaticamente para "Ativo".</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" data-close>Cancelar</button>
+                    <button type="submit" class="btn btn-success">Concluir & Liberar Ativo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Container de Toasts -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Custom App Script -->
+    <script src="app.js"></script>
+</body>
+</html>
