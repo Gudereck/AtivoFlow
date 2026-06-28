@@ -28,6 +28,7 @@ class AtivoFlowApp {
         this.handleLogin = this.handleLogin.bind(this);
         this.handleRegister = this.handleRegister.bind(this);
         this.handleLogout = this.handleLogout.bind(this);
+        this.handleDeletarChamado = this.handleDeletarChamado.bind(this);
     }
 
     // Inicialização da Aplicação
@@ -53,17 +54,39 @@ class AtivoFlowApp {
     // BASE DE DADOS LOCAL (LOCAL STORAGE)
     // ==========================================
     initializeLocalDatabase() {
-        // Se não houver a chave de utilizadores, criamos o admin padrão
-        if (!localStorage.getItem('ativoflow_users')) {
-            const defaultUsers = [
-                {
-                    name: 'Ana Sousa',
-                    username: 'admin',
-                    password: 'admin',
-                    role: 'Técnica de TI'
+        // Inicializamos ou garantimos que o usuário admin tem a role de administrador
+        let users = [];
+        try {
+            users = JSON.parse(localStorage.getItem('ativoflow_users')) || [];
+        } catch (e) {
+            users = [];
+        }
+
+        const adminIndex = users.findIndex(u => u.username === 'admin');
+        if (adminIndex === -1) {
+            users.push({
+                name: 'Ana Sousa',
+                username: 'admin',
+                password: 'admin',
+                role: 'Administrador de TI'
+            });
+            localStorage.setItem('ativoflow_users', JSON.stringify(users));
+        } else if (users[adminIndex].role !== 'Administrador de TI') {
+            // Atualiza a role para Administrador de TI caso estivesse como técnica
+            users[adminIndex].role = 'Administrador de TI';
+            localStorage.setItem('ativoflow_users', JSON.stringify(users));
+        }
+
+        // Se o usuário logado atualmente for o admin e a role dele não for Administrador de TI, atualizamos a sessão dele
+        const loggedUserJSON = localStorage.getItem('ativoflow_current_user');
+        if (loggedUserJSON) {
+            try {
+                const loggedUser = JSON.parse(loggedUserJSON);
+                if (loggedUser.username === 'admin' && loggedUser.role !== 'Administrador de TI') {
+                    loggedUser.role = 'Administrador de TI';
+                    localStorage.setItem('ativoflow_current_user', JSON.stringify(loggedUser));
                 }
-            ];
-            localStorage.setItem('ativoflow_users', JSON.stringify(defaultUsers));
+            } catch(e) {}
         }
     }
 
@@ -703,6 +726,33 @@ class AtivoFlowApp {
         }
     }
 
+    // Excluir Chamado
+    async handleDeletarChamado(id) {
+        if (!confirm('Tem a certeza que deseja excluir permanentemente este chamado?')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE_URL_CHAMADOS}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                this.showToast('Chamado Excluído', 'O chamado foi excluído com sucesso!', 'success');
+                this.fetchData(true);
+            } else {
+                let msg = '';
+                try {
+                    msg = await res.text();
+                } catch(e) {}
+                this.showToast('Erro ao Excluir', msg || 'Não foi possível excluir o chamado.', 'danger');
+            }
+        } catch (error) {
+            console.error('Erro ao excluir chamado:', error);
+            this.showToast('Erro de Rede', 'Erro de comunicação ao excluir chamado.', 'danger');
+        }
+    }
+
     // ==========================================
     // ESTATÍSTICAS E MÉTRICAS
     // ==========================================
@@ -891,7 +941,19 @@ class AtivoFlowApp {
                         <i data-lucide="check" style="width: 14px; height: 14px;"></i> Concluir Chamado
                     </button>
                 `;
-            } else {
+            }
+
+            // Se o utilizador atual for Administrador de TI, adicionamos a opção de excluir
+            if (this.state.currentUser && this.state.currentUser.role === 'Administrador de TI') {
+                actionButtons += `
+                    <button class="btn btn-danger btn-sm btn-excluir-chamado-card" data-id="${ch.id}">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Excluir Chamado
+                    </button>
+                `;
+            }
+
+            // Se não houver nenhuma ação disponível, mostra o texto padrão
+            if (!actionButtons) {
                 actionButtons = `<span style="font-size: 0.8rem; color: hsl(var(--text-muted)); font-style: italic;">Sem ações pendentes</span>`;
             }
 
@@ -948,6 +1010,14 @@ class AtivoFlowApp {
                         equipamentoNome: eqNome,
                         descricao: ch.descricaoProblema
                     });
+                });
+            }
+
+            // Event listener da ação excluir
+            const btnExcluir = card.querySelector('.btn-excluir-chamado-card');
+            if (btnExcluir) {
+                btnExcluir.addEventListener('click', () => {
+                    this.handleDeletarChamado(ch.id);
                 });
             }
 

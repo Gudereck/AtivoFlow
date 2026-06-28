@@ -92,4 +92,18 @@ public class ChamadoService {
     public Optional<Chamado> buscarPorId(Long id) {
         return chamadoRepository.findById(id);
     }
+
+    @Transactional
+    public void deletarChamado(Long id) {
+        Chamado chamado = chamadoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Chamado não encontrado."));
+
+        // Se o chamado estiver aberto ou em andamento e associado a um equipamento,
+        // restauramos o status do equipamento para ATIVO
+        if (chamado.getEquipamento() != null && chamado.getStatus() != StatusChamado.CONCLUIDO) {
+            equipamentoService.atualizarStatus(chamado.getEquipamento().getId(), StatusEquipamento.ATIVO);
+        }
+
+        chamadoRepository.delete(chamado);
+    }
 }

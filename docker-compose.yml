@@ -1,0 +1,44 @@
+services:
+  # Serviço 1: A nossa Base de Dados PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: postgres-gestao-ativos
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 212195
+      POSTGRES_DB: gestao_ativos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Serviço 2: A nossa API Spring Boot
+  api:
+    build: . # Manda o Docker ler o ficheiro 'Dockerfile' que está na mesma pasta
+    container_name: api-gestao-ativos
+    ports:
+      - "8080:8080"
+    environment:
+      # Aqui substituímos as configurações do application.properties para apontar para o contentor 'db'
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/gestao_ativos
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=212195
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - db # Garante que a API só tenta arrancar depois da base de dados
+    restart: unless-stopped
+
+  # Serviço 3: O nosso Front-end (Servidor Nginx para os arquivos estáticos)
+  frontend:
+    image: nginx:alpine
+    container_name: front-gestao-ativos
+    ports:
+      - "80:80"
+    volumes:
+      - ./front-end:/usr/share/nginx/html
+    restart: unless-stopped
+
+# Cria um volume persistente para não perderes os dados se desligares o Docker
+volumes:
+  postgres_data:
